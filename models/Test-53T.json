@@ -1,0 +1,8 @@
+{
+  "hidden": 106496,
+  "feedforward": 425984,
+  "seq_size": 2048,
+  "attn_heads":384,
+  "attn_size": 277,
+  "num_blocks":384
+}
