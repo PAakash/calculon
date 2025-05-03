@@ -2,6 +2,8 @@
 *.py[cod]
 *.log
 
+**results**
+
 # C extensions
 *.so
 
