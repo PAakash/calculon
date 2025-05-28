@@ -4,11 +4,14 @@ from subprocess import call, Popen
 # INFO: Yes did it :)
 
 cmdList = []
+simRuns = []
 maxProcess = 4
 
 import os, os.path
 import glob
 import shutil
+
+resultsDir = "results_workload"
 
 
 def remove_thing(path):
@@ -179,13 +182,6 @@ from calculon.io import write_json_file, read_json_file
 
 
 def genSystemConfigs(config):
-    # config = {
-    #     "memCap": _memCap,
-    #     "interChipBW": _iChipBW,
-    #     "interChipEff": _iChipEff,
-    #     "intraChipBW": _iiChipBW,
-    #     "intraChipEff": _iiChipEff,
-    # }
     baseConfigs = read_json_file("systems/h100_base.json")
     baseConfigs["mem1"]["GiB"] = int(config["memCap"])
     baseConfigs["mem1"]["GBps"] = int(config["memBW"])
@@ -305,7 +301,17 @@ class Loader:
 
 if __name__ == "__main__":
     # models = [1, 2, 4, 11, 26, 53, 128]
-    models = ["turing-530B"]
+    models = [
+        "gpt3-175B",
+        "turing-530B",
+        "megatron-1T",
+        "megatron-2T",
+        "megatron-4T",
+        "megatron-11T",
+        "megatron-26T",
+        "megatron-53T",
+        "megatron-128T",
+    ]
     memoryType = [
         {
             "Name": "HBM2e",
@@ -436,7 +442,8 @@ if __name__ == "__main__":
         {"Name": "NVLink-HBI", "PerLaneBW": 16384, "NrLanes": 6},
     ]
 
-    ucie_datarates = [4, 8, 16, 32, 48, 64, 128]
+    # ucie_datarates = [4, 8, 16, 32, 48, 64, 128]
+    ucie_datarates = [16, 32, 64, 128]
     ucie_modules = [1, 2, 4, 8, 16, 32]
     for m in ucie_modules:
         for i in ucie_datarates:
@@ -460,149 +467,18 @@ if __name__ == "__main__":
 
     # INFO: This is memory BW per GPU/chiplet in GBps
 
-    # WARN: Old config list
-    # memBW = [450, 1000, 1200, 1400, 1800, 2000]
-
-    # WARN: Old config list
-    # interChipletBW = [450, 900, 1000, 1350, 1800]
-    # WARN: Old config list
-    # intraChipletBW = [50, 100, 150, 300, 450, 900, 1000]
-
-    # interChipLetEff = [i/10 for i in range(1, 10, 1)]
-    # intraChipletEff =[i/10 for i in range(1, 10, 1)]
-
-    # memPerStack = [16]
-    # interChipletBW = [900]
-    interChipLetEff = [0.65]
-    # intraChipletBW = [100]
-    intraChipletEff = [0.9]
+    interChipLetEff = [0.65, 0.9]
+    intraChipletEff = [0.65, 0.9]
 
     loader = Loader(
         "Cleaning ./systems/test/ for old configs...", "Done!", 0.05
     ).start()
     empty_directory("./systems/test")
     loader.stop()
-    simRuns = []
 
     # Sensitivity
     defaultConfigs = [64, 4192, 450, 0.65, 450, 0.9]
-    senMemCap = []
-    senMemBW = []
-    seniBW = []
-    seniEff = []
-    seniiBW = []
-    seniiEff = []
     loeSims = []
-
-    # for _cModel in models:
-    # loader = Loader(
-    #     "Preparing sensitivity sims for memory capacity...", "Done!", 0.05
-    # ).start()
-    # for _memCap in memoryType:
-    #     senMemCap.append(
-    #         simGenerator(
-    #             _cModel,
-    #             int(_memCap["CapacityPerStack"] * _memCap["Stacks"]),
-    #             int(_memCap["Datarate"] * _memCap["IO"]),
-    #             defaultConfigs[2],
-    #             defaultConfigs[3],
-    #             defaultConfigs[4],
-    #             defaultConfigs[5],
-    #             f"testRuns/sensitivity/memorySweep",
-    #             _memCap["Name"],
-    #             "NVLink3",
-    #             "NVLink3",
-    #         )
-    #     )
-    # loader.stop()
-    # loader = Loader(
-    #     "Preparing sensitivity sims for inter chiplet BW ...", "Done!", 0.05
-    # ).start()
-    #
-    # for cInterconnect in interconnectType:
-    #     seniBW.append(
-    #         simGenerator(
-    #             _cModel,
-    #             defaultConfigs[0],
-    #             defaultConfigs[1],
-    #             int(cInterconnect["PerLaneBW"] * cInterconnect["NrLanes"]),
-    #             defaultConfigs[3],
-    #             defaultConfigs[4],
-    #             defaultConfigs[5],
-    #             f"testRuns/sensitivity/interChipletBW",
-    #             "HBM3",
-    #             cInterconnect["Name"],
-    #             "NVLink3",
-    #         )
-    #     )
-    #
-    # loader.stop()
-    # loader = Loader(
-    #     "Preparing sensitivity sims for inter chiplet efficiency ...", "Done!", 0.05
-    # ).start()
-    #
-    # for _iChipEff in interChipLetEff:
-    #     seniEff.append(
-    #         simGenerator(
-    #             _cModel,
-    #             defaultConfigs[0],
-    #             defaultConfigs[1],
-    #             defaultConfigs[2],
-    #             _iChipEff,
-    #             defaultConfigs[4],
-    #             defaultConfigs[5],
-    #             f"testRuns/sensitivity/interChipLetEff",
-    #             "HBM3",
-    #             "NVLink3",
-    #             "NVLink3",
-    #         )
-    #     )
-    #
-    # loader.stop()
-    # loader = Loader(
-    #     "Preparing sensitivity sims for intra chiplet BW ...", "Done!", 0.05
-    # ).start()
-    #
-    # for cInterconnect in interconnectType:
-    #     seniiBW.append(
-    #         simGenerator(
-    #             _cModel,
-    #             defaultConfigs[0],
-    #             defaultConfigs[1],
-    #             defaultConfigs[2],
-    #             defaultConfigs[3],
-    #             int(cInterconnect["PerLaneBW"] * cInterconnect["NrLanes"]),
-    #             defaultConfigs[5],
-    #             f"testRuns/sensitivity/intraChipletBW",
-    #             "HBM3",
-    #             "NVLink3",
-    #             cInterconnect["Name"],
-    #         )
-    #     )
-    #
-    # loader.stop()
-    # loader = Loader(
-    #     "Preparing sensitivity sims for intra chiplet efficiency ...", "Done!", 0.05
-    # ).start()
-    #
-    # for _iiChipEff in interChipLetEff:
-    #     seniiEff.append(
-    #         simGenerator(
-    #             _cModel,
-    #             defaultConfigs[0],
-    #             defaultConfigs[1],
-    #             defaultConfigs[2],
-    #             defaultConfigs[3],
-    #             defaultConfigs[4],
-    #             _iiChipEff,
-    #             f"testRuns/sensitivity/intraChipletEff",
-    #             "HBM3",
-    #             "NVLink3",
-    #             "NVLink3",
-    #         )
-    #     )
-    #
-    # loader.stop()
 
     loader = Loader("Preparing full sweep ...", "Done!", 0.05).start()
     for _cModel in models:
@@ -620,7 +496,7 @@ if __name__ == "__main__":
                                     _iChipEff,
                                     int(_iiChipBW["PerLaneBW"] * _iiChipBW["NrLanes"]),
                                     _iiChipEff,
-                                    "testRuns/loe",
+                                    f"{resultsDir}/loe/{_cModel}/",
                                     _memBW["Name"],
                                     _iChipBW["Name"],
                                     _iiChipBW["Name"],
@@ -633,7 +509,7 @@ if __name__ == "__main__":
 
     for cRun in simRuns:
         cModel = cRun["model"]
-        outputDir = "testRuns"
+        # outputDir = f"{resultsDir}"
         outputDir = cRun["output"]
 
         push_commands(
@@ -653,23 +529,13 @@ if __name__ == "__main__":
 
     loader = Loader("Running sims ...", "Done!", 0.05).start()
 
-    run_process(cmdList, loader, 1)
+    run_process(cmdList, loader, 4)
 
     loader.stop()
 
     loader = Loader("Saving sinRuns list ...", "Done!", 0.05).start()
 
-    # with open(f"./testRuns/sensitivity/memorySweep/simRuns.txt", "w") as _file:
-    #     _file.writelines("\n".join(senMemCap))
-    # with open(f"./testRuns/sensitivity/interChipletBW/simRuns.txt", "w") as _file:
-    #     _file.writelines("\n".join(seniBW))
-    # with open(f"./testRuns/sensitivity/interChipLetEff/simRuns.txt", "w") as _file:
-    #     _file.writelines("\n".join(seniEff))
-    # with open(f"./testRuns/sensitivity/intraChipletBW/simRuns.txt", "w") as _file:
-    #     _file.writelines("\n".join(seniiBW))
-    # with open(f"./testRuns/sensitivity/intraChipletBW/simRuns.txt", "w") as _file:
-    #     _file.writelines("\n".join(seniiEff))
-    with open(f"./testRuns/loe/simRuns.txt", "w") as _file:
+    with open(f"{resultsDir}/simRuns.txt", "w") as _file:
         _file.writelines("\n".join(loeSims))
 
     loader.stop()

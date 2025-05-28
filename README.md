@@ -1,3 +1,37 @@
+# Changelog:
+
+- runScript.py v0
+    > Running in loe mode
+    > Standard sweep going through arbitrary parameters and large sweep for
+    > memory BW, capacity, intra-node and inter-node BW sweep
+- runScript_updated.py v1
+    > This script failed since I started two scripts updated and new :(
+    > there are about 20k results available
+    > Updated sweep parameters and combined memory tech
+    > Sweep for single model as before
+- runScript_new.py v2
+    > Adding models for the sweep
+    > Removed some ucie data rates
+    > adding models from 175B to 125T, most of them might not work and log will
+    > be like no possible solution found or error in divinding for TP
+- runScript_v3.py
+    > Added efficiency sweep but did not run this script
+- runScript_v4.py
+    > Going back to sensitivity sweeps
+    > 
+
+
+- test
+    > test results to check calculon works or not, mostly with single config
+    > with different model
+- testRuns
+    > runScript_updated.py results are here
+- archive/testRuns
+    > runScript.py file results
+- results_workload
+    > results for runScript_new.py
+
+
 [![DOI](https://zenodo.org/badge/660734586.svg)](https://zenodo.org/badge/latestdoi/660734586)
 # Calculon - Co-design for large scale parallel applications
 
